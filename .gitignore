@@ -4,3 +4,7 @@ client.py
 lmpgmx.py
 manager.py
 templates.py
+__pycache__
+benzene.lmps
+test.py
+*.png

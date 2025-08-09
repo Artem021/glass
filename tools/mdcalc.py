@@ -25,7 +25,9 @@ def new_name(filename : str, ext : str):
 
 def free_cpus():
     '''
-    Returns number of CPUs currently available [int]. Matches the number of available threads.
+    `None` --> `int`
+    
+    Returns number of logical CPUs (threads) which are available at the moment.
     '''
     return int(psutil.cpu_count() * (1 - psutil.cpu_percent()*0.01))
 
@@ -155,7 +157,7 @@ def energy(wd : str, sim_property : str):
         os.remove(xvg)
     assert sim_property in KNOWN_TERMS, f'available properties are: ' + ', '.join([p for p in KNOWN_TERMS])
     assert os.path.exists(edr), f'no ener.edr in folder: {wd}'
-    returncode, stdout, stderr = _gmx_proc([GMX_EXE, 'trjconv', 'energy', '-f', edr, '-o', xvg], wd=wd, message=f'{sim_property}\n\n')
+    returncode, stdout, stderr = _gmx_proc([GMX_EXE, 'energy', '-f', edr, '-o', xvg], wd=wd, message=f'{sim_property}\n\n')
     if returncode !=0:
         raise ValueError(f"`gmx energy` terminated with error: {stderr}")
     return xvg
@@ -196,7 +198,7 @@ def trjconv(wd : str, f : str, s : str, o : str, **kwargs):
     dt = kwargs.get('dt', None)
     sep = kwargs.get('sep', False)
     pbc = kwargs.get('pbc', None)
-    cmd = [GMX_EXE, '-f', f, '-s', s, '-o', o]
+    cmd = [GMX_EXE, 'trjconv', '-f', f, '-s', s, '-o', o]
     if sep == True:
         cmd+=['-sep']
     if pbc !=None:
@@ -221,4 +223,5 @@ def trjconv(wd : str, f : str, s : str, o : str, **kwargs):
     else:
         print('WARNING: error in `trjconv` subroutine: ', stderr)
         return
+
 

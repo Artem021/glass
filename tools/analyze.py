@@ -198,7 +198,7 @@ def pd2D(df : pd.DataFrame, xval : str = 'Temperature', yval : str = 'Volume', h
         k1, b1 = np.polyfit(x1,y1, 1)
         ix = -(b0 - b1) / (k0 - k1) # x intersection point
         iy = ix * k0 + b0 # y intersection point
-        print(ix,iy)
+        # print(ix,iy)
         xfit = np.array([xstart, ix, xend]) # fitted x points
         yfit = np.array([xstart*k0+b0, iy, xend*k1+b1]) # fitted y points
         plt.plot(xfit, yfit, color = 'green', label = f'Linear fit, n = {n}')
@@ -214,6 +214,46 @@ def pd2D(df : pd.DataFrame, xval : str = 'Temperature', yval : str = 'Volume', h
         plt.savefig(f'{yval}_{xval}.png')
     if show:
         plt.show()
+
+
+# TODO
+def compute_transition(x : np.ndarray, y : np.ndarray, minx : float, maxx : float, method = 'linear4', n = 4):
+    '''
+    Find transition point on 2D dataset.
+    
+    '''
+    _avail = ['hyperbola', 'piecewise', 'linear4']
+    assert(method in _avail), f'Unknown method requested: {method}. Available methods are: ' + ', '.join(_avail)
+
+    if method == 'linear4':
+        sel = np.isfinite(x)
+        if minx != None:
+            sel = sel & (x>=minx)
+        if maxx != None:
+            sel = sel & (x<=maxx)
+        # sel = (x>=minx) & (x <= maxx)
+        x = x[sel]
+        y = y[sel]
+        plt.scatter(x, y, s=0.1)
+        x0 = x[: x.size//n] # first 1/n
+        x1 = x[-x.size//n :] # last (n-1)/n
+        y0 = y[: y.size//n] # first 1/n
+        y1 = y[-y.size//n :] # last (n-1)/n
+        k0, b0 = np.polyfit(x0, y0, 1)
+        k1, b1 = np.polyfit(x1, y1, 1)
+        ix = -(b0 - b1) / (k0 - k1) # x intersection point
+        iy = ix * k0 + b0 # y intersection point
+        ylfit = np.polyval((k0, b0), x0)
+        yrfit = np.polyval((k1, b1), x1)
+        plt.plot(x0, ylfit, color = 'black', label = f'Linear fit, n = {n}')
+        plt.plot(x1, yrfit, color = 'black')
+        plt.plot(ix,iy, 'go', label = f'Center of l-fit: ({ix:.1f}, {iy:.1f})')
+        plt.legend()
+        plt.show()
+        return (ix,iy)
+    elif method == 'piecewise':
+        pass
+    
 
 def xvg_to_pd(xvgfile : str):
     '''
@@ -294,6 +334,18 @@ def select_columns(df : pd.DataFrame, properties : list[str]):
 
 TEST = False
 if __name__ == '__main__':
+    cool = r'C:\Users\artem\OneDrive\_Work_Kunitsyn\Projects\PolyBMSTU\Tg_calculations\pvc\7k\rate20\cool\1.lammps.csv'
+    df = pd.read_csv(cool)
+    x = df['Temp'].to_numpy()
+    y = df['Volume'].to_numpy()
+    # plt.scatter(x, y, s=0.2)
+    # plt.xlabel('Temperature (K)')
+    # plt.ylabel('Volume, A^3')
+    print(compute_transition(x,y,210,490))
+    # plt.show()
+    print(0)
+    
+    
     if TEST:
         print('nothing to test yet')
         # print(free_volume(wd))
